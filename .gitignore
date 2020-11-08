@@ -1,0 +1,13 @@
+# IDE settings
+.vscode
+
+# Compiled Python
+__pycache__
+*.pyc
+
+# Compiled Java
+*.class
+
+# Compiled C on Windows and Linux
+*.exe
+*.elf
