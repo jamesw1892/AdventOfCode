@@ -1,8 +1,8 @@
 from typing import List
 
-def read_input() -> List[int]:
+def read_input(name="input.txt") -> List[int]:
     l = []
-    with open("input.txt") as f:
+    with open(name) as f:
         for line in f:
             if line.strip() != "":
                 l.append(int(line.strip()))
@@ -17,6 +17,18 @@ def brute_force(l: List[int]) -> int:
                     return l[index1] * l[index2] * l[index3]
     return 0
 
-if __name__ == "__main__":
+def main():
     l = read_input()
     print(brute_force(l))
+
+def test():
+
+    l = read_input("input_test.txt")
+
+    assert brute_force(l) == 241861950, "Brute force failed on test input"
+
+    print("All tests passed")
+
+if __name__ == "__main__":
+    # main()
+    test()
