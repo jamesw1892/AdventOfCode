@@ -51,7 +51,10 @@ public class Part1 {
     }
 
     public static void main(String[] args) throws IOException, NumberFormatException {
-        System.out.println(getNumValid("input.txt"));
-        // test();
+        if (args.length >= 1 && args[0].equals("test")) {
+            test();
+        } else {
+            System.out.println(getNumValid("input.txt"));
+        }
     }
 }

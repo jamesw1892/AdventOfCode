@@ -30,5 +30,8 @@ def test():
     print("All tests passed")
 
 if __name__ == "__main__":
-    # main()
-    test()
+    from sys import argv
+    if len(argv) >= 2 and argv[1] == "test":
+        test()
+    else:
+        main()
