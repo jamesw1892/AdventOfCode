@@ -19,18 +19,18 @@ public class Part1 {
 
     private static boolean isValid(String line) throws NumberFormatException {
         String[] splitLine = line.split(": ");
-        assert splitLine.length == 2: "Line does not have exactly 1 ': '";
+        myAssert(splitLine.length == 2, "Line does not have exactly 1 ': '");
         String policy = splitLine[0];
         String password = splitLine[1];
 
         String[] splitPolicy = policy.split(" ");
-        assert splitPolicy.length == 2: "Policy does not have exactly 1 space";
+        myAssert(splitPolicy.length == 2, "Policy does not have exactly 1 space");
         String numChars = splitPolicy[0];
-        assert splitPolicy[1].length() == 1: "Required char is not a single character";
+        myAssert(splitPolicy[1].length() == 1, "Required char is not a single character");
         char requiredChar = splitPolicy[1].toCharArray()[0];
 
         String[] splitNumChars = numChars.split("-");
-        assert splitNumChars.length == 2: "Num chars does not contains exactly 1 dash";
+        myAssert(splitNumChars.length == 2, "Num chars does not contains exactly 1 dash");
         int minNum = Integer.parseInt(splitNumChars[0]);
         int maxNum = Integer.parseInt(splitNumChars[1]);
 
@@ -44,8 +44,12 @@ public class Part1 {
         return minNum <= count && count <= maxNum;
     }
 
+    private static void myAssert(boolean condition, String msg) {
+        if (!condition) throw new AssertionError(msg);
+    }
+
     private static void test() throws IOException, NumberFormatException {
-        assert getNumValid("input_test.txt") == 2: "Failed test input";
+        myAssert(getNumValid("input_test.txt") == 2, "Failed test input");
 
         System.out.println("All tests passed");
     }

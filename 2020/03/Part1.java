@@ -46,8 +46,12 @@ public class Part1 {
         return numTrees;
     }
 
+    private static void myAssert(boolean condition, String msg) {
+        if (!condition) throw new AssertionError(msg);
+    }
+
     private static void test() throws IOException {
-        assert getNumTrees("input_test.txt") == 7: "Failed test input";
+        myAssert(getNumTrees("input_test.txt") == 7, "Failed test input");
 
         System.out.println("All tests passed");
     }

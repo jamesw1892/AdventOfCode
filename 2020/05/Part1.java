@@ -36,11 +36,13 @@ public class Part1 {
         return highestSeatID;
     }
 
+    private static void myAssert(boolean condition, String msg) {
+        if (!condition) throw new AssertionError(msg);
+    }
+
     private static void test() throws IOException {
 
-        int a = getSeatID("FBFBBFFRLR");
-
-        assert a == 357: "Failed getSeatID";
+        myAssert(getSeatID("FBFBBFFRLR") == 357, "Failed test input");
 
         System.out.println("All tests passed");
     }

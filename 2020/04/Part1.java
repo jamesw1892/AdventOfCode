@@ -34,7 +34,7 @@ public class Part1 {
                 String[] splitLine = line.split(" ");
                 for (String kvp: splitLine) {
                     String[] kvpSplit = kvp.split(":");
-                    assert kvpSplit.length == 2: "key value pair does not contain exactly one colon";
+                    myAssert(kvpSplit.length == 2, "key value pair does not contain exactly one colon");
                     switch (kvpSplit[0]) {
                         case "byr": hasBYR = true; break;
                         case "iyr": hasIYR = true; break;
@@ -55,8 +55,12 @@ public class Part1 {
         return numValidPassports;
     }
 
+    private static void myAssert(boolean condition, String msg) {
+        if (!condition) throw new AssertionError(msg);
+    }
+
     private static void test() throws IOException {
-        assert getNumValidPassports("input_test_part1.txt") == 2: "Failed test input";
+        myAssert(getNumValidPassports("input_test_part1.txt") == 2, "Failed test input");
 
         System.out.println("All tests passed");
     }

@@ -138,7 +138,7 @@ public class Part2 {
                 String[] splitLine = line.split(" ");
                 for (String kvp: splitLine) {
                     String[] kvpSplit = kvp.split(":");
-                    assert kvpSplit.length == 2: "key value pair does not contain exactly one colon";
+                    myAssert(kvpSplit.length == 2, "key value pair does not contain exactly one colon");
                     switch (kvpSplit[0]) {
                         case "byr": hasBYR = checkBYR(kvpSplit[1]); break;
                         case "iyr": hasIYR = checkIYR(kvpSplit[1]); break;
@@ -159,27 +159,31 @@ public class Part2 {
         return numValidPassports;
     }
 
+    private static void myAssert(boolean condition, String msg) {
+        if (!condition) throw new AssertionError(msg);
+    }
+
     private static void test() throws IOException {
 
-        assert checkBYR("2002"): "BYR check 1 failed";
-        assert !checkBYR("2003"): "BYR check 2 failed";
+        myAssert(checkBYR("2002"), "BYR check 1 failed");
+        myAssert(!checkBYR("2003"), "BYR check 2 failed");
 
-        assert checkHGT("60in"): "HGT check 1 failed";
-        assert checkHGT("190cm"): "HGT check 2 failed";
-        assert !checkHGT("190in"): "HGT check 3 failed";
-        assert !checkHGT("190"): "HGT check 4 failed";
+        myAssert(checkHGT("60in"), "HGT check 1 failed");
+        myAssert(checkHGT("190cm"), "HGT check 2 failed");
+        myAssert(!checkHGT("190in"), "HGT check 3 failed");
+        myAssert(!checkHGT("190"), "HGT check 4 failed");
 
-        assert checkHCL("#123abc"): "HCL check 1 failed";
-        assert !checkHCL("#123abz"): "HCL check 2 failed";
-        assert !checkHCL("123abc"): "HCL check 3 failed";
+        myAssert(checkHCL("#123abc"), "HCL check 1 failed");
+        myAssert(!checkHCL("#123abz"), "HCL check 2 failed");
+        myAssert(!checkHCL("123abc"), "HCL check 3 failed");
 
-        assert checkECL("brn"): "ECL check 1 failed";
-        assert !checkECL("wat"): "ECL check 2 failed";
+        myAssert(checkECL("brn"), "ECL check 1 failed");
+        myAssert(!checkECL("wat"), "ECL check 2 failed");
 
-        assert checkPID("000000001"): "PID check 1 failed";
-        assert !checkPID("0123456789"): "PID check 2 failed";
+        myAssert(checkPID("000000001"), "PID check 1 failed");
+        myAssert(!checkPID("0123456789"), "PID check 2 failed");
 
-        assert getNumValidPassports("input_test_part2.txt") == 4: "Failed test input";
+        myAssert(getNumValidPassports("input_test_part2.txt") == 4, "Failed test input");
 
         System.out.println("All tests passed");
     }

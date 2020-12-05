@@ -44,16 +44,6 @@ public class Part2 {
         return numTrees;
     }
 
-    private static void test() throws IOException {
-        assert getNumTrees("input_test.txt", 1, 1) == 2: "Failed test input";
-        assert getNumTrees("input_test.txt", 3, 1) == 7: "Failed test input";
-        assert getNumTrees("input_test.txt", 5, 1) == 3: "Failed test input";
-        assert getNumTrees("input_test.txt", 7, 1) == 4: "Failed test input";
-        assert getNumTrees("input_test.txt", 1, 2) == 2: "Failed test input";
-
-        System.out.println("All tests passed");
-    }
-
     private static long mult() throws IOException {
         long a = getNumTrees("input.txt", 1, 1);
         long b = getNumTrees("input.txt", 3, 1);
@@ -61,6 +51,20 @@ public class Part2 {
         long d = getNumTrees("input.txt", 7, 1);
         long e = getNumTrees("input.txt", 1, 2);
         return (long) a * b * c * d * e;
+    }
+
+    private static void myAssert(boolean condition, String msg) {
+        if (!condition) throw new AssertionError(msg);
+    }
+
+    private static void test() throws IOException {
+        myAssert(getNumTrees("input_test.txt", 1, 1) == 2, "Failed test input");
+        myAssert(getNumTrees("input_test.txt", 3, 1) == 7, "Failed test input");
+        myAssert(getNumTrees("input_test.txt", 5, 1) == 3, "Failed test input");
+        myAssert(getNumTrees("input_test.txt", 7, 1) == 4, "Failed test input");
+        myAssert(getNumTrees("input_test.txt", 1, 2) == 2, "Failed test input");
+
+        System.out.println("All tests passed");
     }
 
     public static void main(String[] args) throws IOException {
