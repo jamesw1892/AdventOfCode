@@ -3,11 +3,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-class Grid {
+class GridPart1 {
     private ArrayList<ArrayList<Seat>> grid;
     private ArrayList<ArrayList<Seat>> newGrid;
+    private int width;
+    private int height;
 
-    public Grid(ArrayList<ArrayList<Seat>> grid) {
+    public GridPart1(ArrayList<ArrayList<Seat>> grid) {
         this.grid = grid;
         this.newGrid = new ArrayList<ArrayList<Seat>>();
         for (ArrayList<Seat> inner: grid) {
@@ -15,14 +17,9 @@ class Grid {
             ArrayList<Seat> temp = (ArrayList<Seat>) inner.clone();
             this.newGrid.add(temp);
         }
-    }
-
-    public int height() {
-        return this.grid.size();
-    }
-
-    public int width() {
-        return this.grid.get(0).size();
+        this.height = this.grid.size();
+        Part1.myAssert(this.height > 0, "Must have at least 1 row");
+        this.width = this.grid.get(0).size();
     }
 
     public Seat get(int x, int y) {
@@ -49,7 +46,7 @@ class Grid {
     private boolean noneAdjacentOccupied(int x, int y) {
 
         for (int[] pair: getAdjacentPairs(x, y)) {
-            if (pair[0] >= 0 && pair[0] < width() && pair[1] >= 0 && pair[1] < height()) {
+            if (pair[0] >= 0 && pair[0] < this.width && pair[1] >= 0 && pair[1] < this.height) {
                 if (this.get(pair[0], pair[1]) == Seat.OCCUPIED) {
                     return false;
                 }
@@ -62,7 +59,7 @@ class Grid {
 
         int occupiedCount = 0;
         for (int[] pair: getAdjacentPairs(x, y)) {
-            if (pair[0] >= 0 && pair[0] < width() && pair[1] >= 0 && pair[1] < height()) {
+            if (pair[0] >= 0 && pair[0] < this.width && pair[1] >= 0 && pair[1] < this.height) {
                 if (this.get(pair[0], pair[1]) == Seat.OCCUPIED) {
                     occupiedCount++;
                 }
@@ -93,8 +90,8 @@ class Grid {
 
     public boolean applyRules() {
         boolean somethingHasChanged = false;
-        for (int y = 0; y < height(); y++) {
-            for (int x = 0; x < width(); x++) {
+        for (int y = 0; y < this.height; y++) {
+            for (int x = 0; x < this.width; x++) {
                 if (applyRulesSeat(x, y)) somethingHasChanged = true;
             }
         }
@@ -109,8 +106,8 @@ class Grid {
 
     public int getNumOccupied() {
         int numOccupied = 0;
-        for (int y = 0; y < height(); y++) {
-            for (int x = 0; x < width(); x++) {
+        for (int y = 0; y < this.height; y++) {
+            for (int x = 0; x < this.width; x++) {
                 if (get(x, y) == Seat.OCCUPIED) numOccupied++;
             }
         }
@@ -120,7 +117,7 @@ class Grid {
 
 public class Part1 {
 
-    private static int ans(Grid grid) {
+    private static int ans(GridPart1 grid) {
 
         while (grid.applyRules());
 
@@ -147,10 +144,10 @@ public class Part1 {
         }
         scanner.close();
 
-        return ans(new Grid(g));
+        return ans(new GridPart1(g));
     }
 
-    private static void myAssert(boolean condition, String msg) {
+    public static void myAssert(boolean condition, String msg) {
         if (!condition) throw new AssertionError(msg);
     }
 
