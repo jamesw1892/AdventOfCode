@@ -1,47 +1,19 @@
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Scanner;
 
 public class Part2 {
 
-    private static int ans(GridPart2 grid) {
+    private static int solve(String name) throws IOException {
+
+        GridPart2 grid = new GridPart2(Shared.parseInput(name));
 
         while (grid.applyRules());
 
         return grid.getNumOccupied();
     }
 
-    private static int solve(String name) throws IOException {
-        FileInputStream file = new FileInputStream(name);
-        Scanner scanner = new Scanner(file);
-
-        ArrayList<ArrayList<Seat>> g = new ArrayList<>();
-        
-        while (scanner.hasNextLine()) {
-            ArrayList<Seat> inner = new ArrayList<>();
-            for (char chr: scanner.nextLine().toCharArray()) {
-                switch (chr) {
-                    case '.': inner.add(Seat.FLOOR); break;
-                    case 'L': inner.add(Seat.EMPTY); break;
-                    case '#': inner.add(Seat.OCCUPIED); break;
-                    default: myAssert(false, "Invalid seat");
-                }
-            }
-            g.add(inner);
-        }
-        scanner.close();
-
-        return ans(new GridPart2(g));
-    }
-
-    public static void myAssert(boolean condition, String msg) {
-        if (!condition) throw new AssertionError(msg);
-    }
-
     private static void test() throws IOException {
 
-        myAssert(solve("input_test.txt") == 26, "Failed test input");
+        Shared.myAssert(solve("input_test.txt") == 26, "Failed test input");
 
         System.out.println("All tests passed");
     }

@@ -15,7 +15,7 @@ class GridPart1 {
             this.newGrid.add(temp);
         }
         this.height = this.grid.size();
-        Part1.myAssert(this.height > 0, "Must have at least 1 row");
+        Shared.myAssert(this.height > 0, "Must have at least 1 row");
         this.width = this.grid.get(0).size();
     }
 
