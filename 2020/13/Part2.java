@@ -1,6 +1,5 @@
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Scanner;
 import java.util.TreeMap;
 import java.util.Map.Entry;
@@ -8,139 +7,50 @@ import java.util.Map.Entry;
 public class Part2 {
 
     /**
-     * Check whether n is a valid solution with buses so for each bus:
-     * it's 
+     * Solve the chinese remainder theorem problem by sieving. The divisors must be pairwise coprime.
+     * Returns x such that for each n and a pair, x == a (mod n) and 0 <= x < N where N is the product of all n's.
+     * @param buses Map where the keys are the divisors (n's) and the values are the corresponding remainders (a's)
      */
-    private static boolean works(HashMap<Long, Long> buses, long n) {
-        for (Long key: buses.keySet()) {
-            if ((n + key) % buses.get(key) != 0) {
-                return false;
-            }
-        }
-        return true;
-    }
+    private static long CRT(TreeMap<Long, Long> buses) {
 
-    /**
-     * Find by brute force by trying all possible values but it is slightly
-     * optimised to only check the ones that the largest ID works for, this
-     * means we increment by the largest ID so check the fewest possible values.
-     * This is still too slow.
-     */
-    private static long bruteForce(HashMap<Long, Long> buses) {
+        /**
+         * The sieving method finds the solution to the first two pairs of n's and a's
+         * then we know the answer must be this plus a multiple of n_1 * n_2. Then we
+         * incorporate the 3rd pair and solve and then add multiples of n_1 * n_2 * n_3, etc.
+         * 
+         * It is more efficient when choosing the largest n's first so that is why we use
+         * a tree map and get the last entry
+         */
 
-        // find largest value (bus ID)
-        Long maxValue = null;
-        long maxValuedKey = 0L;
-        for (Long key: buses.keySet()) {
-            Long value = buses.get(key);
-            if (maxValue == null || maxValue < value) {
-                maxValue = value;
-                maxValuedKey = key;
-            }
-        }
+        // remove and return the entry with largest n
+        Entry<Long, Long> entry = buses.pollLastEntry();
 
-        long n = maxValue - maxValuedKey;
-        while (n <= 0 || !works(buses, n)) {
-            n += maxValue;
-        }
-        return n;
-    }
-
-    private static boolean allEqual(long[] x) {
-        long value = x[0];
-        for (int index = 1; index < x.length; index++) {
-            if (x[index] != value) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static int getMinIndex(long[] x) {
-        int minIndex = 0;
-        long minValue = x[0];
-
-        for (int index = 1; index < x.length; index++) {
-            long value = x[index];
-            if (value < minValue) {
-                minIndex = index;
-                minValue = value;
-            }
-        }
-
-        return minIndex;
-    }
-
-    /**
-     * Increase smallest value by the bus ID until all equal. Think this is
-     * actually slower than the optimised brute force
-     */
-    private static long minInc(HashMap<Long, Long> buses) {
-        long[] x = new long[buses.size()];
-        long[] values = new long[buses.size()];
-
-        // populate arrays with x starting at offsets, not the numbers themselves
-        int index = 0;
-        for (Long key: buses.keySet()) {
-            x[index] = buses.get(key) - key;
-            values[index] = buses.get(key);
-            index++;
-        }
-
-        // repeatedly increase the smallest value by its multiple until all equal
-        while (!allEqual(x)) {
-            int minIndex = getMinIndex(x);
-            x[minIndex] += values[minIndex];
-        }
-
-        return x[0];
-    }
-
-    /**
-     * Solve the chinese remainder theorem problem by sieving. The divisors must be pairwise coprime
-     */
-    private static long ChineseRemainderTheorem(TreeMap<Long, Long> map) {
-
-        Entry<Long, Long> entry = map.pollLastEntry();
+        // this contains the running product of the n's. It starts as the first n.
         long productNs = entry.getKey();
+
+        /**
+         * the solution to the first few pairs, as the outer while loop iterates,
+         * this becomes the solution to more and more pairs until at the end it
+         * will be the final solution
+         */
         long x = entry.getValue();
-        while (!map.isEmpty()) {
-            while (x % map.lastKey() != map.lastEntry().getValue()) {
-                x += productNs;
+
+        while (!buses.isEmpty()) { // while we haven't solved all pairs yet
+
+            while (x % buses.lastKey() != buses.lastEntry().getValue()) { // this is the success condition for the current sub-problem
+                x += productNs; // if not solved, we add the product of the n's until it is
             }
-            productNs *= map.pollLastEntry().getKey();
+            productNs *= buses.pollLastEntry().getKey(); // remove the entry with largest n and add this to the running product
         }
 
         return x;
     }
 
     /**
-     * Convert this problem into the chinese remainder theorem problem
-     * and solve it
+     * Parse the input and convert the problem to the chinese remainder theorem
+     * so we can solve it efficiently
      */
-    private static long CRT(HashMap<Long, Long> buses) {
-
-        TreeMap<Long, Long> map = new TreeMap<>();
-
-        for (Long key: buses.keySet()) {
-
-            long n = buses.get(key);
-            key %= n; // make sure indices are smaller than or equal to bus IDs
-
-            map.put(n, (n - key) % n); // mod n so key=0 stays as 0 rather than n
-        }
-
-        return ChineseRemainderTheorem(map);
-    }
-
-    private static long getAns(HashMap<Long, Long> buses) {
-
-        // return bruteForce(buses);
-        // return minInc(buses);
-        return CRT(buses);
-    }
-
-    private static HashMap<Long, Long> parseInput(String name) throws IOException {
+    private static TreeMap<Long, Long> parseInput(String name) throws IOException {
         FileInputStream file = new FileInputStream(name);
         Scanner scanner = new Scanner(file);
 
@@ -148,12 +58,26 @@ public class Part2 {
         String line = scanner.nextLine();
         scanner.close();
 
-        HashMap<Long, Long> buses = new HashMap<>();
+        // the chinese remainder theorem works faster if it is done in
+        // descending order of n's so we use a tree map to sort them
+        TreeMap<Long, Long> buses = new TreeMap<>();
 
-        long counter = 0L;
+        long counter = 0L; // this is the offset by the time
         for (String busTime: line.split(",")) {
             if (!busTime.equals("x")) {
-                buses.put(counter, Long.parseLong(busTime));
+
+                // n is the bus ID - the time interval between arrivals
+                long n = Long.parseLong(busTime);
+
+                /**
+                 * a is the remainder which is n - counter. However, we also
+                 * need to mod n first because it could be greater than n, then
+                 * we subtract and finally we need to mod again because if
+                 * (counter % n) is 0, a should not be n but 0.
+                 */
+                long a = (n - (counter % n)) % n;
+
+                buses.put(n, a);
             }
             counter++;
         }
@@ -162,7 +86,7 @@ public class Part2 {
     }
 
     private static long solve(String name) throws IOException {
-        return getAns(parseInput(name));
+        return CRT(parseInput(name));
     }
 
     private static void myAssert(boolean condition, String msg) {
@@ -171,16 +95,6 @@ public class Part2 {
 
     private static void test() throws IOException {
 
-        // test works method
-        HashMap<Long, Long> buses = new HashMap<>();
-        buses.put(0L, 2L);
-        buses.put(1L, 3L);
-        buses.put(2L, 5L);
-        myAssert(works(buses, 8), "Works doesn't work 1");
-        myAssert(!works(buses, 5), "Works doesn't work 2");
-        myAssert(!works(buses, 7), "Works doesn't work 3");
-        myAssert(!works(buses, 9), "Works doesn't work 4");
-        
         myAssert(solve("input_test.txt") == 1068781L, "Failed test input");
         myAssert(solve("input_test_1.txt") == 3417L, "Failed test input 1");
         myAssert(solve("input_test_2.txt") == 754018L, "Failed test input 2");
