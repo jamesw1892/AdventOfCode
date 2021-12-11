@@ -1,0 +1,5 @@
+# Advent of Code 2021 Day 11
+
+I noticed that in order to ensure we only flash each point once (even though it could be incremented past 10), we can only flash it when it equals exactly 10. However, we can't use recursion (depth-first search) because this could lead to a loop of increments meaning a point is incremented to 10 and then to 11 before it is checked it is equal to 10. This would mean it is not flashed because it seems like it already has been but in reality it hasn't. To fix this, we use a queue to do breadth-first search and therefore we always flash points incremented to 10 before they are incremented past 10.
+
+During each step, we first add all points to the queue. Then we pop an item from the queue until it is empty and increment it. If the point now has an energy level of 10 then we 'flash' it which involves adding all its neighbours to the queue.
