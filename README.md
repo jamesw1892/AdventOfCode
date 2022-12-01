@@ -6,7 +6,8 @@ Years I did (more or less) as they came out:
 
 1. 2019: Python 3 - only completed 3 days before uni work overtook me
 2. 2020: Java - tried every day, but some took too long to run
-3. 2021: C++ - in progress
+3. 2021: C++ - got about half way
+4. 2022: Whatever language I feel like, probably mostly Python
 
 Years I did retrospectively:
 
