@@ -11,3 +11,6 @@ __pycache__
 # Compiled C on Windows and Linux
 *.exe
 *.elf
+
+# inputs
+input*.txt
