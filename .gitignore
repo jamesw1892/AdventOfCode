@@ -8,6 +8,10 @@ __pycache__
 # Compiled Java
 *.class
 
+# Java/TypeScript
+node_modules/
+package-lock.json
+
 # Compiled C on Windows and Linux
 *.exe
 *.elf
