@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 class Part1 {
   private static int[] processLine(String line) {
@@ -55,11 +56,9 @@ class Part1 {
       times = processLine(reader.readLine());
       distances = processLine(reader.readLine());
     }
-    int product = 1;
-    for (int index = 0; index < times.length; index++) {
-      product *= numWaysToWin(times[index], distances[index]);
-    }
-    System.out.println(product);
+    System.out.println(IntStream.range(0, times.length)
+        .map(index -> numWaysToWin(times[index], distances[index]))
+        .reduce(1, Math::multiplyExact));
   }
 
   public static void main(String[] args) throws IOException {
