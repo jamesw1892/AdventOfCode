@@ -18,17 +18,17 @@ class Part1 {
   static long numWaysToWin(long time, long distance) {
     /**
      * The way to get the furthest is to hold the button down for exactly half
-     * the time. This can be calculated by finding the maximum point of the graph
-     * y = x * (time - x) where time is the maximum time you have, x is the time
-     * you hold the button down for and y is how far you go. This is because
-     * distance = speed * time, your speed is the time you hold the button down
-     * for and you time travelling it the total time - the time you hold the
-     * button down for.
+     * the time. This can be calculated by finding the maximum point of the
+     * graph y = x * (time - x) where time is the maximum time you have, x is
+     * the time you hold the button down for and y is how far you go. This is
+     * because distance = speed * time, your speed is the time you hold the
+     * button down for and your time travelling is the total time subtract the
+     * time you hold the button down for.
      * 
      * To find how many options we have when we have to pick a whole number of
-     * miliseconds (x is an integer), we can solve the equation above for x when
-     * y = the distance to beat. We do this with the quadratic formula where
-     * a = 1, b = -time and c = distance.
+     * miliseconds (x is an integer), we can solve the equation above for x
+     * when y = the distance to beat. We do this with the quadratic formula
+     * where a = 1, b = -time and c = distance.
      */
     double sqrtDiscriminant = Math.sqrt(time * time - 4 * distance);
 
