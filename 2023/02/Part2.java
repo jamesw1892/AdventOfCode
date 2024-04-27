@@ -18,10 +18,9 @@ class Part2 {
    * The power of a game is the product of the maximum number of each colour in the game
    */
   private static Long gamePower(String game) {
-    return Stream.of(maxColour(game, "red"),
-                     maxColour(game, "green"),
-                     maxColour(game, "blue"))
-                 .reduce(1L, Math::multiplyExact);
+    return maxColour(game, "red")
+         * maxColour(game, "green")
+         * maxColour(game, "blue");
   }
 
   private static void calculate(String filename) throws IOException {
