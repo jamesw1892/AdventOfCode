@@ -3,34 +3,40 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.function.Predicate;
-import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class Part1 {
-  private static long numWins(String card) {
-    String[] nums = card.split(": ")[1].split(" \\| ");
-    HashSet<String> winningNums = new HashSet<>();
-    for (String num: nums[0].split(" ")) {
-      num = num.strip();
-      if (!num.isEmpty()) {
-        winningNums.add(num);
-      }
-    }
-    return Arrays.stream(nums[1].split(" "))
-          .map(String::strip)
-          .filter(Predicate.not(String::isEmpty))
-          .filter(num -> winningNums.contains(num))
-          .count();
+
+  /**
+   * When given a string of (potentially multiple) space separated numbers (winning or not), return a stream of them
+   */
+  private static Stream<String> processNums(String nums) {
+    return Arrays.stream(nums.split(" "))
+        .map(String::strip)
+        .filter(Predicate.not(String::isEmpty));
   }
 
+  /**
+   * Return the number of our numbers that are also winning numbers
+   */
+  private static long numWins(String card) {
+    String[] nums = card.split(": ")[1].split(" \\| ");
+    Set<String> winningNums = processNums(nums[0]).collect(Collectors.toSet());
+    return processNums(nums[1]).filter(num -> winningNums.contains(num)).count();
+  }
+
+  /**
+   * The number of points for a card is 2 to the power of the number of winning numbers minus 1
+   */
   private static long cardPoints(String card) {
     return (long) Math.pow(2, numWins(card) - 1);
   }
 
   private static void calculate(String filename) throws IOException {
     try (Stream<String> lines = Files.lines(Paths.get(filename))) {
-      System.out.println(lines.mapToLong(Part1::cardPoints)
-                              .sum());
+      System.out.println(lines.mapToLong(Part1::cardPoints).sum()); // Sum of points for each card
     }
   }
 
