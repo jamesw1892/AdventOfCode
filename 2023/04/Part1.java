@@ -1,8 +1,9 @@
+import static java.util.function.Predicate.not;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.function.Predicate;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -15,7 +16,7 @@ class Part1 {
   private static Stream<String> processNums(String nums) {
     return Arrays.stream(nums.split(" "))
         .map(String::strip)
-        .filter(Predicate.not(String::isEmpty));
+        .filter(not(String::isEmpty));
   }
 
   /**
