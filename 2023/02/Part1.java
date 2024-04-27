@@ -24,15 +24,11 @@ class Part1 {
     }
   }
 
-  private static boolean impossibleSet(String set) {
-    return Arrays.stream(set.split(", ")) // Create stream of each colour count
-                 .anyMatch(Part1::impossibleColourCount); // If any are impossible, the set is impossible
-  }
-
   private static boolean possibleGame(String line) {
     return !Arrays.stream(line.split(": ")[1] // Remove Game ID from start of line
                               .split("; "))   // Create stream of each set
-                  .anyMatch(Part1::impossibleSet); // If any are impossible, the game is impossible
+                  .flatMap(set -> Arrays.stream(set.split(", "))) // Make each colour count of each set be a separate element in the stream
+                  .anyMatch(Part1::impossibleColourCount); // If any are impossible, the game is impossible
   }
 
   private static void calculate(String filename) throws IOException {
