@@ -1,30 +1,27 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 class Part2 {
+  private static long maxColour(String game, String colour) {
+    return Arrays.stream(game.split("; "))                        // Create a stream of each set
+                 .flatMap(set -> Arrays.stream(set.split(", ")))  // Make each colourCount in each set a separate element of the stream
+                 .filter(   colourCount ->              colourCount.split(" ")[1].equals(colour)) // Only keep those with the colour we're interested in
+                 .mapToLong(colourCount -> Long.valueOf(colourCount.split(" ")[0])) // Convert the colourCount to the count
+                 .max() // Find the maximum count of that colour in the stream
+                 .orElseThrow(); // It returns an optional in case the stream is empty but it shouldn't be
+  }
 
   /**
-   * The power of a game is the product of the minimum number of each colour in the game
+   * The power of a game is the product of the maximum number of each colour in the game
    */
   private static Long gamePower(String game) {
-    Long redMax = 0L;
-    Long greenMax = 0L;
-    Long blueMax = 0L;
-    for (String set: game.split("; ")) {
-      for (String colourCount: set.split(", ")) {
-        String[] splat = colourCount.split(" ");
-        long count = Long.valueOf(splat[0]);
-        String colour = splat[1];
-        switch (colour) {
-          case "red"  : if (count >   redMax)   redMax = count; break;
-          case "green": if (count > greenMax) greenMax = count; break;
-          case "blue" : if (count >  blueMax)  blueMax = count; break;
-        }
-      }
-    }
-    return redMax * greenMax * blueMax;
+    return Stream.of(maxColour(game, "red"),
+                     maxColour(game, "green"),
+                     maxColour(game, "blue"))
+                 .reduce(1L, Math::multiplyExact);
   }
 
   private static void calculate(String filename) throws IOException {
