@@ -22,7 +22,7 @@ class Part1 {
   /**
    * Return the number of our numbers that are also winning numbers
    */
-  private static long numWins(String card) {
+  static long numWins(String card) {
     String[] nums = card.split(": ")[1].split(" \\| ");
     Set<String> winningNums = processNums(nums[0]).collect(Collectors.toSet());
     return processNums(nums[1]).filter(num -> winningNums.contains(num)).count();
