@@ -2,12 +2,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.stream.Stream;
 
 class Part1 {
-  static final int MAX_RED = 12;
-  static final int MAX_GREEN = 13;
-  static final int MAX_BLUE = 14;
+  static final Map<String, Integer> maxColourCount = Map.of(
+    "red"  , 12,
+    "green", 13,
+    "blue" , 14
+  );
 
   /**
    * A colour count is impossible if it has more than the maximum number of that colour in it
@@ -16,12 +19,7 @@ class Part1 {
     String[] splat = colourCount.split(" ");
     int count = Integer.valueOf(splat[0]);
     String colour = splat[1];
-    switch (colour) {
-      case "red"  : return count > MAX_RED;
-      case "green": return count > MAX_GREEN;
-      case "blue" : return count > MAX_BLUE;
-      default: throw new IllegalArgumentException("Invalid colour");
-    }
+    return count > maxColourCount.get(colour);
   }
 
   private static boolean possibleGame(String line) {
