@@ -7,15 +7,15 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 class Part1 {
-  private static int[] processLine(String line) {
+  private static long[] processLine(String line) {
     return Arrays.stream(line.split(":")[1].split(" "))
         .map(String::strip)
         .filter(not(String::isEmpty))
-        .mapToInt(Integer::valueOf)
+        .mapToLong(Long::valueOf)
         .toArray();
   }
 
-  private static int numWaysToWin(int time, int distance) {
+  static long numWaysToWin(long time, long distance) {
     /**
      * The way to get the furthest is to hold the button down for exactly half
      * the time. This can be calculated by finding the maximum point of the graph
@@ -34,13 +34,13 @@ class Part1 {
 
     // Round to nearest integer since we must hold the button for a whole
     // number of miliseconds
-    int minTimeToPress = (int) Math.ceil((time - sqrtDiscriminant) / 2);
-    int maxTimeToPress = (int) Math.floor((time + sqrtDiscriminant) / 2);
+    long minTimeToPress = (long) Math.ceil((time - sqrtDiscriminant) / 2);
+    long maxTimeToPress = (long) Math.floor((time + sqrtDiscriminant) / 2);
 
     // Must beat the existing record so if equals it then can't hold down for
     // that number
-    int distanceMinTimeToPress = minTimeToPress * (time - minTimeToPress);
-    int distanceMaxTimeToPress = maxTimeToPress * (time - maxTimeToPress);
+    long distanceMinTimeToPress = minTimeToPress * (time - minTimeToPress);
+    long distanceMaxTimeToPress = maxTimeToPress * (time - maxTimeToPress);
     if (distanceMinTimeToPress == distance) minTimeToPress += 1;
     if (distanceMaxTimeToPress == distance) maxTimeToPress -= 1;
 
@@ -50,14 +50,14 @@ class Part1 {
   }
 
   private static void calculate(String filename) throws IOException {
-    int[] times;
-    int[] distances;
+    long[] times;
+    long[] distances;
     try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
       times = processLine(reader.readLine());
       distances = processLine(reader.readLine());
     }
     System.out.println(IntStream.range(0, times.length)
-        .map(index -> numWaysToWin(times[index], distances[index]))
+        .mapToLong(index -> numWaysToWin(times[index], distances[index]))
         .reduce(1, Math::multiplyExact));
   }
 
