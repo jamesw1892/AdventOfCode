@@ -16,6 +16,8 @@ package-lock.json
 *.exe
 *.elf
 
+Makefile
+
 # inputs
 input*.txt
 
