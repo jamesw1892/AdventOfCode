@@ -1,10 +1,8 @@
 use regex::{Captures, Regex, RegexSet};
 use std::collections::{HashMap, VecDeque};
-use std::env;
-use std::fs;
-use std::io;
-use std::io::BufRead;
-use std::str;
+use std::env::args;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
 fn get_val(text: &str, vals: &mut HashMap<String, u16>) -> Option<u16> {
     text.parse::<u16>().ok().or_else(|| vals.get(text).copied())
@@ -79,7 +77,7 @@ fn run_part1(filename: &str) {
     let mut vals: HashMap<String, u16> = HashMap::new();
     let mut queue: VecDeque<String> = VecDeque::new();
 
-    io::BufReader::new(fs::File::open(filename).unwrap())
+    BufReader::new(File::open(filename).unwrap())
         .lines()
         .flatten()
         .for_each(|line: String| {
@@ -110,7 +108,7 @@ fn run_part2(filename: &str) {
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = args().collect();
     let part: &str = if args.len() > 1 { &args[1] } else { "part1" };
     let filename: &str = if args.len() > 2 {
         &args[2]
