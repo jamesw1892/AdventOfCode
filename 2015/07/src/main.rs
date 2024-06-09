@@ -3,53 +3,50 @@ use std::fs;
 use std::io;
 use std::io::BufRead;
 use std::str;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use regex::{Captures, Regex, RegexSet};
 
-fn get_val(text: &str, vals: &mut HashMap<String, u16>) -> u16 {
-    let keys = vals.keys().map(|s| s.clone()).collect::<Vec<_>>().join(", ");
-    let err_msg = format!("Failed to parse value {} as number and isn't in hashmap (keys: {})", text, keys);
-    text.parse::<u16>().unwrap_or_else(|_| *vals.get(text).expect(err_msg.as_str()))
+fn get_val(text: &str, vals: &mut HashMap<String, u16>, queue: &mut VecDeque<String>, line: &String) -> Option<u16> {
+    text.parse::<u16>().ok().or_else(|| vals.get(text).copied()).or_else(|| {
+        queue.push_back(line.clone());
+        None
+    })
 }
 
-fn process_line_part1(regex_set: &RegexSet, regexes: &Vec<Regex>, vals: &mut HashMap<String, u16>, line: String) {
+fn process_line_part1(regex_set: &RegexSet, regexes: &Vec<Regex>, vals: &mut HashMap<String, u16>, queue: &mut VecDeque<String>, line: String) {
     let mut set_matches_iter = regex_set.matches(line.as_str()).into_iter();
     let match_index: usize = set_matches_iter.next().unwrap();
     assert!(set_matches_iter.next().is_none(), "More matches!");
     let captures: Captures = regexes.get(match_index).unwrap().captures(line.as_str()).unwrap();
     let output: String = captures.name("output").unwrap().as_str().to_owned();
 
-    // println!("Matching patterns for {}: {}", line, regex_set.matches(line.as_str()).iter().map(|s| s.to_string()).collect::<Vec<_>>().join(", "));
-
     // Set value
     if match_index == 0 {
-        let val: u16 = get_val(captures.name("val").unwrap().as_str(), vals);
-        vals.insert(output, val);
+        get_val(captures.name("val").unwrap().as_str(), vals, queue, &line)
+            .and_then(|val: u16| vals.insert(output, val));
 
     // NOT
     } else if match_index == 1 {
-        let input: u16 = get_val(captures.name("input").unwrap().as_str(), vals);
-        vals.insert(output, !input);
+        get_val(captures.name("input").unwrap().as_str(), vals, queue, &line)
+            .and_then(|input: u16| vals.insert(output, !input));
 
     } else {
-        let input1: u16 = get_val(captures.name("input1").unwrap().as_str(), vals);
-        let input2: u16 = get_val(captures.name("input2").unwrap().as_str(), vals);
-
-        match match_index {
-            // AND
-            2 => vals.insert(output, input1 & input2),
-            // OR
-            3 => vals.insert(output, input1 | input2),
-            // LSHIFT
-            4 => {
-                // println!("output: {}, input1: {}, input2: {}", output, input1, input2);
-                vals.insert(output, input1 << input2)},
-            // RSHIFT
-            5 => {
-                // println!("output: {}, input1: {}, input2: {}", output, input1, input2);
-                vals.insert(output, input1 >> input2)},
-            _ => panic!("Impossible: Matched regex out of range"),
-        };
+        get_val(captures.name("input1").unwrap().as_str(), vals, queue, &line)
+            .and_then(|input1: u16| get_val(captures.name("input2").unwrap().as_str(), vals, queue, &line).map(|input2| (input1, input2)))
+            .and_then(|(input1, input2)| {
+                match match_index {
+                    // AND
+                    2 => vals.insert(output, input1 & input2),
+                    // OR
+                    3 => vals.insert(output, input1 | input2),
+                    // LSHIFT
+                    4 => vals.insert(output, input1 << input2),
+                    // RSHIFT
+                    5 => vals.insert(output, input1 >> input2),
+                    _ => panic!("Impossible: Matched regex out of range"),
+                };
+                Some("hi")
+            });
     }
 }
 
@@ -65,14 +62,28 @@ fn run_part1(filename: &str) {
     let regex_set: RegexSet = RegexSet::new(patterns).unwrap();
     let regexes: Vec<Regex> = patterns.iter().map(|pattern: &&str| Regex::new(pattern).unwrap()).collect();
 
-    let file = fs::File::open(filename).unwrap();
     let mut vals: HashMap<String, u16> = HashMap::new();
-    io::BufReader::new(file)
+    let mut queue: VecDeque<String> = VecDeque::new();
+
+    io::BufReader::new(fs::File::open(filename).unwrap())
         .lines()
         .flatten()
-        .for_each(|line: String| process_line_part1(&regex_set, &regexes, &mut vals, line));
+        .for_each(|line: String| process_line_part1(&regex_set, &regexes, &mut vals, &mut queue, line));
+
+    while !queue.is_empty() {
+        let line = queue.pop_front().unwrap();
+        process_line_part1(&regex_set, &regexes, &mut vals, &mut queue, line);
+    }
+
     if filename == "test.txt" {
-        vals.iter().for_each(|(k, v)| println!("{}: {}", k, v));
+        assert_eq!(*vals.get("d").unwrap(), 72);
+        assert_eq!(*vals.get("e").unwrap(), 507);
+        assert_eq!(*vals.get("f").unwrap(), 492);
+        assert_eq!(*vals.get("g").unwrap(), 114);
+        assert_eq!(*vals.get("h").unwrap(), 65412);
+        assert_eq!(*vals.get("i").unwrap(), 65079);
+        assert_eq!(*vals.get("x").unwrap(), 123);
+        assert_eq!(*vals.get("y").unwrap(), 456);
     } else {
         println!("{}", vals.get("a").unwrap());
     }
@@ -80,22 +91,6 @@ fn run_part1(filename: &str) {
 
 fn run_part2(filename: &str) {
     let _ = filename;
-    // let file = fs::File::open(filename).unwrap();
-    // io::BufReader::new(file)
-    //     .lines()
-    //     .flatten()
-    //     .for_each(|s: String| process_line_part2(&mut grid, s));
-    // println!(
-    //     "{}",
-    //     grid.into_iter()
-    //         .map(|inner_arr: [u32; 1000]| inner_arr.into_iter().sum::<u32>())
-    //         .sum::<u32>()
-    // );
-
-    println!("{}", 4 << 2);
-    println!("{}", 4 >> 2);
-    println!("{}", 123 << 2);
-    println!("{}", 456 >> 2);
 }
 
 fn main() {
