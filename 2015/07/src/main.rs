@@ -61,7 +61,7 @@ fn process_line_part1(
 
 fn run_part1(filename: &str) {
     let patterns: [&str; 6] = [
-        r"^(?P<val>\d+) -> (?P<output>\w+)$",
+        r"^(?P<val>\w+) -> (?P<output>\w+)$",
         r"^NOT (?P<input>\w+) -> (?P<output>\w+)$",
         r"^(?P<input1>\w+) AND (?P<input2>\w+) -> (?P<output>\w+)$",
         r"^(?P<input1>\w+) OR (?P<input2>\w+) -> (?P<output>\w+)$",
