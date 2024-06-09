@@ -8,12 +8,13 @@ fn get_val(text: &str, vals: &mut HashMap<String, u16>) -> Option<u16> {
     text.parse::<u16>().ok().or_else(|| vals.get(text).copied())
 }
 
-fn process_line_part1(
+fn process_line(
     regex_set: &RegexSet,
     regexes: &Vec<Regex>,
     vals: &mut HashMap<String, u16>,
     queue: &mut VecDeque<String>,
     line: String,
+    b_override: Option<u16>,
 ) {
     let mut set_matches_iter = regex_set.matches(line.as_str()).into_iter();
     let match_index: usize = set_matches_iter
@@ -25,7 +26,12 @@ fn process_line_part1(
         .unwrap()
         .captures(line.as_str())
         .unwrap();
-    let output: String = captures.name("output").unwrap().as_str().to_owned();
+    let output: String = captures.name("output").unwrap().as_str().to_string();
+
+    if output == "b" && b_override.is_some() {
+        vals.insert("b".to_string(), b_override.unwrap());
+        return;
+    }
 
     // Set value
     if match_index == 0 {
@@ -61,7 +67,7 @@ fn process_line_part1(
     }
 }
 
-fn run_part1(filename: &str) {
+fn run(filename: &str, b_override: Option<u16>) -> HashMap<String, u16> {
     let patterns: [&str; 6] = [
         r"^(?P<val>\w+) -> (?P<output>\w+)$",
         r"^NOT (?P<input>\w+) -> (?P<output>\w+)$",
@@ -84,12 +90,18 @@ fn run_part1(filename: &str) {
     )
     .lines()
     .flatten()
-    .for_each(|line: String| process_line_part1(&regex_set, &regexes, &mut vals, &mut queue, line));
+    .for_each(|line: String| process_line(&regex_set, &regexes, &mut vals, &mut queue, line, b_override));
 
     while !queue.is_empty() {
         let line = queue.pop_front().unwrap();
-        process_line_part1(&regex_set, &regexes, &mut vals, &mut queue, line);
+        process_line(&regex_set, &regexes, &mut vals, &mut queue, line, b_override);
     }
+
+    vals
+}
+
+fn run_part1(filename: &str) {
+    let vals: HashMap<String, u16> = run(filename, None);
 
     if filename == "test.txt" {
         assert_eq!(*vals.get("d").expect("No variable 'd' set"), 72);
@@ -106,7 +118,13 @@ fn run_part1(filename: &str) {
 }
 
 fn run_part2(filename: &str) {
-    let _ = filename;
+    let vals: HashMap<String, u16> = run(filename, Some(956));
+
+    if filename == "test.txt" {
+        println!("text.txt only makes sense for part 1");
+    } else {
+        println!("{}", vals.get("a").expect("No variable 'a' set"));
+    }
 }
 
 fn main() {
