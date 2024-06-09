@@ -8,12 +8,12 @@ use std::str::FromStr;
 
 lazy_static! {
     static ref PATTERNS: [&'static str; 6] = [
-        r"^(?P<val>\w+) -> (?P<output>\w+)$",
-        r"^NOT (?P<input>\w+) -> (?P<output>\w+)$",
-        r"^(?P<input1>\w+) AND (?P<input2>\w+) -> (?P<output>\w+)$",
-        r"^(?P<input1>\w+) OR (?P<input2>\w+) -> (?P<output>\w+)$",
-        r"^(?P<input1>\w+) LSHIFT (?P<input2>\w+) -> (?P<output>\w+)$",
-        r"^(?P<input1>\w+) RSHIFT (?P<input2>\w+) -> (?P<output>\w+)$",
+        r"^(?P<input>\w+) -> (?P<variable>\w+)$",
+        r"^NOT (?P<input>\w+) -> (?P<variable>\w+)$",
+        r"^(?P<input1>\w+) AND (?P<input2>\w+) -> (?P<variable>\w+)$",
+        r"^(?P<input1>\w+) OR (?P<input2>\w+) -> (?P<variable>\w+)$",
+        r"^(?P<input1>\w+) LSHIFT (?P<input2>\w+) -> (?P<variable>\w+)$",
+        r"^(?P<input1>\w+) RSHIFT (?P<input2>\w+) -> (?P<variable>\w+)$",
     ];
     static ref REGEX_SET: RegexSet = RegexSet::new(PATTERNS.iter()).unwrap();
     static ref REGEXES: Vec<Regex> = PATTERNS
@@ -41,12 +41,12 @@ impl FromStr for Operation {
             return Err(ParseErr);
         }
         let captures: Captures = REGEXES.get(match_index).unwrap().captures(line).unwrap();
-        let output: String = captures.name("output").unwrap().as_str().to_string();
+        let variable: String = captures.name("variable").unwrap().as_str().to_string();
 
         Ok(if match_index == 0 {
-            Operation::OpSet(captures.name("val").unwrap().as_str().to_string(), output)
+            Operation::OpSet(captures.name("input").unwrap().as_str().to_string(), variable)
         } else if match_index == 1 {
-            Operation::OpNot(captures.name("input").unwrap().as_str().to_string(), output)
+            Operation::OpNot(captures.name("input").unwrap().as_str().to_string(), variable)
         } else {
             let input1: String = captures.name("input1").unwrap().as_str().to_string();
             let input2: String = captures.name("input2").unwrap().as_str().to_string();
@@ -57,7 +57,7 @@ impl FromStr for Operation {
                 5 => |i1, i2| i1 >> i2,
                 _ => panic!("Impossible"),
             };
-            Operation::OpBinary(input1, input2, output, Box::new(func))
+            Operation::OpBinary(input1, input2, variable, Box::new(func))
         })
     }
 }
@@ -66,36 +66,44 @@ fn get_val(text: &str, vals: &mut HashMap<String, u16>) -> Option<u16> {
     text.parse::<u16>().ok().or_else(|| vals.get(text).copied())
 }
 
+fn get_variable_and_value(
+    vals: &mut HashMap<String, u16>,
+    line: &String,
+    b_override: Option<u16>,
+) -> Option<(String, u16)> {
+    Some(
+        match Operation::from_str(line.as_str())
+            .expect(format!("Error parsing line '{}'", line).as_str())
+        {
+            Operation::OpSet(input, variable) => {
+                let input = if variable == "b" && b_override.is_some() {
+                    b_override.unwrap()
+                } else {
+                    get_val(input.as_str(), vals)?
+                };
+                (variable, input)
+            }
+            Operation::OpNot(input, variable) => (variable, !get_val(input.as_str(), vals)?),
+            Operation::OpBinary(input1, input2, variable, func) => (
+                variable,
+                func(
+                    get_val(input1.as_str(), vals)?,
+                    get_val(input2.as_str(), vals)?,
+                ),
+            ),
+        },
+    )
+}
+
 fn process_line(
     vals: &mut HashMap<String, u16>,
     queue: &mut VecDeque<String>,
     line: String,
     b_override: Option<u16>,
 ) {
-    match Operation::from_str(line.as_str())
-        .expect(format!("Error parsing line '{}'", line).as_str())
-    {
-        Operation::OpSet(input, output) => {
-            if output == "b" && b_override.is_some() {
-                vals.insert("b".to_string(), b_override.unwrap());
-            } else {
-                match get_val(input.as_str(), vals) {
-                    Some(val) => drop(vals.insert(output, val)),
-                    None => queue.push_back(line),
-                }
-            }
-        }
-        Operation::OpNot(input, output) => match get_val(input.as_str(), vals) {
-            Some(input) => drop(vals.insert(output, !input)),
-            None => queue.push_back(line),
-        },
-        Operation::OpBinary(input1, input2, output, func) => match get_val(input1.as_str(), vals) {
-            None => queue.push_back(line),
-            Some(input1) => match get_val(input2.as_str(), vals) {
-                None => queue.push_back(line),
-                Some(input2) => drop(vals.insert(output, func(input1, input2))),
-            },
-        },
+    match get_variable_and_value(vals, &line, b_override) {
+        Some((variable, value)) => drop(vals.insert(variable, value)),
+        None => queue.push_back(line),
     }
 }
 
