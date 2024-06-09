@@ -16,7 +16,9 @@ fn process_line_part1(
     line: String,
 ) {
     let mut set_matches_iter = regex_set.matches(line.as_str()).into_iter();
-    let match_index: usize = set_matches_iter.next().unwrap();
+    let match_index: usize = set_matches_iter
+        .next()
+        .expect(format!("No regex matched '{}'", line).as_str());
     assert!(set_matches_iter.next().is_none(), "More matches!");
     let captures: Captures = regexes
         .get(match_index)
@@ -77,12 +79,12 @@ fn run_part1(filename: &str) {
     let mut vals: HashMap<String, u16> = HashMap::new();
     let mut queue: VecDeque<String> = VecDeque::new();
 
-    BufReader::new(File::open(filename).unwrap())
-        .lines()
-        .flatten()
-        .for_each(|line: String| {
-            process_line_part1(&regex_set, &regexes, &mut vals, &mut queue, line)
-        });
+    BufReader::new(
+        File::open(filename).expect(format!("Failed to open file '{}'", filename).as_str()),
+    )
+    .lines()
+    .flatten()
+    .for_each(|line: String| process_line_part1(&regex_set, &regexes, &mut vals, &mut queue, line));
 
     while !queue.is_empty() {
         let line = queue.pop_front().unwrap();
@@ -90,16 +92,16 @@ fn run_part1(filename: &str) {
     }
 
     if filename == "test.txt" {
-        assert_eq!(*vals.get("d").unwrap(), 72);
-        assert_eq!(*vals.get("e").unwrap(), 507);
-        assert_eq!(*vals.get("f").unwrap(), 492);
-        assert_eq!(*vals.get("g").unwrap(), 114);
-        assert_eq!(*vals.get("h").unwrap(), 65412);
-        assert_eq!(*vals.get("i").unwrap(), 65079);
-        assert_eq!(*vals.get("x").unwrap(), 123);
-        assert_eq!(*vals.get("y").unwrap(), 456);
+        assert_eq!(*vals.get("d").expect("No variable 'd' set"), 72);
+        assert_eq!(*vals.get("e").expect("No variable 'e' set"), 507);
+        assert_eq!(*vals.get("f").expect("No variable 'f' set"), 492);
+        assert_eq!(*vals.get("g").expect("No variable 'g' set"), 114);
+        assert_eq!(*vals.get("h").expect("No variable 'h' set"), 65412);
+        assert_eq!(*vals.get("i").expect("No variable 'i' set"), 65079);
+        assert_eq!(*vals.get("x").expect("No variable 'x' set"), 123);
+        assert_eq!(*vals.get("y").expect("No variable 'y' set"), 456);
     } else {
-        println!("{}", vals.get("a").unwrap());
+        println!("{}", vals.get("a").expect("No variable 'a' set"));
     }
 }
 
