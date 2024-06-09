@@ -1,74 +1,13 @@
+use lazy_static::lazy_static;
 use regex::{Captures, Regex, RegexSet};
 use std::collections::{HashMap, VecDeque};
 use std::env::args;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::str::FromStr;
 
-fn get_val(text: &str, vals: &mut HashMap<String, u16>) -> Option<u16> {
-    text.parse::<u16>().ok().or_else(|| vals.get(text).copied())
-}
-
-fn process_line(
-    regex_set: &RegexSet,
-    regexes: &Vec<Regex>,
-    vals: &mut HashMap<String, u16>,
-    queue: &mut VecDeque<String>,
-    line: String,
-    b_override: Option<u16>,
-) {
-    let mut set_matches_iter = regex_set.matches(line.as_str()).into_iter();
-    let match_index: usize = set_matches_iter
-        .next()
-        .expect(format!("No regex matched '{}'", line).as_str());
-    assert!(set_matches_iter.next().is_none(), "More matches!");
-    let captures: Captures = regexes
-        .get(match_index)
-        .unwrap()
-        .captures(line.as_str())
-        .unwrap();
-    let output: String = captures.name("output").unwrap().as_str().to_string();
-
-    if output == "b" && b_override.is_some() {
-        vals.insert("b".to_string(), b_override.unwrap());
-        return;
-    }
-
-    // Set value
-    if match_index == 0 {
-        match get_val(captures.name("val").unwrap().as_str(), vals) {
-            Some(val) => drop(vals.insert(output, val)),
-            None => queue.push_back(line),
-        }
-
-    // NOT
-    } else if match_index == 1 {
-        match get_val(captures.name("input").unwrap().as_str(), vals) {
-            Some(input) => drop(vals.insert(output, !input)),
-            None => queue.push_back(line),
-        }
-    } else {
-        match get_val(captures.name("input1").unwrap().as_str(), vals) {
-            None => queue.push_back(line),
-            Some(input1) => match get_val(captures.name("input2").unwrap().as_str(), vals) {
-                None => queue.push_back(line),
-                Some(input2) => match match_index {
-                    // AND
-                    2 => drop(vals.insert(output, input1 & input2)),
-                    // OR
-                    3 => drop(vals.insert(output, input1 | input2)),
-                    // LSHIFT
-                    4 => drop(vals.insert(output, input1 << input2)),
-                    // RSHIFT
-                    5 => drop(vals.insert(output, input1 >> input2)),
-                    _ => panic!("Impossible: Matched regex out of range"),
-                },
-            },
-        }
-    }
-}
-
-fn run(filename: &str, b_override: Option<u16>) -> HashMap<String, u16> {
-    let patterns: [&str; 6] = [
+lazy_static! {
+    static ref PATTERNS: [&'static str; 6] = [
         r"^(?P<val>\w+) -> (?P<output>\w+)$",
         r"^NOT (?P<input>\w+) -> (?P<output>\w+)$",
         r"^(?P<input1>\w+) AND (?P<input2>\w+) -> (?P<output>\w+)$",
@@ -76,12 +15,91 @@ fn run(filename: &str, b_override: Option<u16>) -> HashMap<String, u16> {
         r"^(?P<input1>\w+) LSHIFT (?P<input2>\w+) -> (?P<output>\w+)$",
         r"^(?P<input1>\w+) RSHIFT (?P<input2>\w+) -> (?P<output>\w+)$",
     ];
-    let regex_set: RegexSet = RegexSet::new(patterns).unwrap();
-    let regexes: Vec<Regex> = patterns
+    static ref REGEX_SET: RegexSet = RegexSet::new(PATTERNS.iter()).unwrap();
+    static ref REGEXES: Vec<Regex> = PATTERNS
         .iter()
         .map(|pattern: &&str| Regex::new(pattern).unwrap())
         .collect();
+}
 
+#[derive(Debug)]
+struct ParseErr;
+
+enum Operation {
+    OpSet(String, String),
+    OpNot(String, String),
+    OpBinary(String, String, String, Box<dyn Fn(u16, u16) -> u16>),
+}
+
+impl FromStr for Operation {
+    type Err = ParseErr;
+
+    fn from_str(line: &str) -> Result<Self, Self::Err> {
+        let mut set_matches_iter = REGEX_SET.matches(line).into_iter();
+        let match_index: usize = set_matches_iter.next().ok_or(ParseErr)?;
+        if set_matches_iter.next().is_some() {
+            return Err(ParseErr);
+        }
+        let captures: Captures = REGEXES.get(match_index).unwrap().captures(line).unwrap();
+        let output: String = captures.name("output").unwrap().as_str().to_string();
+
+        Ok(if match_index == 0 {
+            Operation::OpSet(captures.name("val").unwrap().as_str().to_string(), output)
+        } else if match_index == 1 {
+            Operation::OpNot(captures.name("input").unwrap().as_str().to_string(), output)
+        } else {
+            let input1: String = captures.name("input1").unwrap().as_str().to_string();
+            let input2: String = captures.name("input2").unwrap().as_str().to_string();
+            let func = match match_index {
+                2 => |i1, i2| i1 & i2,
+                3 => |i1, i2| i1 | i2,
+                4 => |i1, i2| i1 << i2,
+                5 => |i1, i2| i1 >> i2,
+                _ => panic!("Impossible"),
+            };
+            Operation::OpBinary(input1, input2, output, Box::new(func))
+        })
+    }
+}
+
+fn get_val(text: &str, vals: &mut HashMap<String, u16>) -> Option<u16> {
+    text.parse::<u16>().ok().or_else(|| vals.get(text).copied())
+}
+
+fn process_line(
+    vals: &mut HashMap<String, u16>,
+    queue: &mut VecDeque<String>,
+    line: String,
+    b_override: Option<u16>,
+) {
+    match Operation::from_str(line.as_str())
+        .expect(format!("Error parsing line '{}'", line).as_str())
+    {
+        Operation::OpSet(input, output) => {
+            if output == "b" && b_override.is_some() {
+                vals.insert("b".to_string(), b_override.unwrap());
+            } else {
+                match get_val(input.as_str(), vals) {
+                    Some(val) => drop(vals.insert(output, val)),
+                    None => queue.push_back(line),
+                }
+            }
+        }
+        Operation::OpNot(input, output) => match get_val(input.as_str(), vals) {
+            Some(input) => drop(vals.insert(output, !input)),
+            None => queue.push_back(line),
+        },
+        Operation::OpBinary(input1, input2, output, func) => match get_val(input1.as_str(), vals) {
+            None => queue.push_back(line),
+            Some(input1) => match get_val(input2.as_str(), vals) {
+                None => queue.push_back(line),
+                Some(input2) => drop(vals.insert(output, func(input1, input2))),
+            },
+        },
+    }
+}
+
+fn run(filename: &str, b_override: Option<u16>) -> HashMap<String, u16> {
     let mut vals: HashMap<String, u16> = HashMap::new();
     let mut queue: VecDeque<String> = VecDeque::new();
 
@@ -90,11 +108,11 @@ fn run(filename: &str, b_override: Option<u16>) -> HashMap<String, u16> {
     )
     .lines()
     .flatten()
-    .for_each(|line: String| process_line(&regex_set, &regexes, &mut vals, &mut queue, line, b_override));
+    .for_each(|line: String| process_line(&mut vals, &mut queue, line, b_override));
 
     while !queue.is_empty() {
         let line = queue.pop_front().unwrap();
-        process_line(&regex_set, &regexes, &mut vals, &mut queue, line, b_override);
+        process_line(&mut vals, &mut queue, line, b_override);
     }
 
     vals
