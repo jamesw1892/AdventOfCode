@@ -1,18 +1,17 @@
-use itertools::{Itertools, Permutations};
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
-use std::collections::hash_map::Keys;
 use std::collections::HashMap;
 use std::env::args;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Lines};
-use std::iter::{Flatten, Peekable};
+use std::iter::Flatten;
 use std::num::ParseIntError;
-use std::slice::Iter;
 use std::str::FromStr;
 
 lazy_static! {
-    static ref REGEX: Regex = Regex::new(r"^(?P<from>\w+) to (?P<to>\w+) = (?P<distance>\d+)$").unwrap();
+    static ref REGEX: Regex =
+        Regex::new(r"^(?P<from>\w+) to (?P<to>\w+) = (?P<distance>\d+)$").unwrap();
 }
 
 struct Line {
@@ -25,11 +24,19 @@ impl FromStr for Line {
     type Err = String;
 
     fn from_str(line: &str) -> Result<Self, Self::Err> {
-        let captures: Captures = REGEX.captures(line).ok_or(format!("Failed to parse line '{}' - does not match regex", line))?;
+        let captures: Captures = REGEX.captures(line).ok_or(format!(
+            "Failed to parse line '{}' - does not match regex",
+            line
+        ))?;
         let from: String = captures.name("from").unwrap().as_str().to_string();
         let to: String = captures.name("to").unwrap().as_str().to_string();
         let distance: &str = captures.name("distance").unwrap().as_str();
-        let distance: u16 = distance.parse().map_err(|err: ParseIntError| format!("Failed to parse distance from string '{}' into u16: {}", distance, err))?;
+        let distance: u16 = distance.parse().map_err(|err: ParseIntError| {
+            format!(
+                "Failed to parse distance from string '{}' into u16: {}",
+                distance, err
+            )
+        })?;
         return Ok(Line { from, to, distance });
     }
 }
@@ -40,7 +47,9 @@ struct Graph {
 
 impl Graph {
     fn new() -> Graph {
-        Graph { adjacency_list: HashMap::new() }
+        Graph {
+            adjacency_list: HashMap::new(),
+        }
     }
 
     fn add(&mut self, line: Line) {
@@ -50,7 +59,7 @@ impl Graph {
                 let mut inner: HashMap<String, u16> = HashMap::new();
                 inner.insert(line.to.clone(), line.distance);
                 self.adjacency_list.insert(line.from.clone(), inner);
-            },
+            }
         }
         match self.adjacency_list.get_mut(&line.to) {
             Some(inner) => drop(inner.insert(line.from, line.distance)),
@@ -58,28 +67,38 @@ impl Graph {
                 let mut inner: HashMap<String, u16> = HashMap::new();
                 inner.insert(line.from, line.distance);
                 self.adjacency_list.insert(line.to, inner);
-            },
+            }
         }
     }
 
     fn path_distance(&self, path: Vec<&String>) -> u16 {
         let mut prev: Option<&String> = None;
-        path.iter().map(|to: &&String| {
-            let dis: &u16 = match prev {
-                None => &0,
-                Some(from) => self.adjacency_list.get(from).unwrap().get(*to).unwrap()
-            };
-            prev = Some(*to);
-            dis
-        }).sum()
+        path.iter()
+            .map(|to: &&String| {
+                let dis: &u16 = match prev {
+                    None => &0,
+                    Some(from) => self.adjacency_list.get(from).unwrap().get(*to).unwrap(),
+                };
+                prev = Some(*to);
+                dis
+            })
+            .sum()
     }
 
     fn min_path_distance(&self) -> Option<u16> {
-        self.adjacency_list.keys().permutations(self.adjacency_list.len()).map(|path: Vec<&String>| self.path_distance(path)).min()
+        self.adjacency_list
+            .keys()
+            .permutations(self.adjacency_list.len())
+            .map(|path: Vec<&String>| self.path_distance(path))
+            .min()
     }
 
     fn max_path_distance(&self) -> Option<u16> {
-        self.adjacency_list.keys().permutations(self.adjacency_list.len()).map(|path: Vec<&String>| self.path_distance(path)).max()
+        self.adjacency_list
+            .keys()
+            .permutations(self.adjacency_list.len())
+            .map(|path: Vec<&String>| self.path_distance(path))
+            .max()
     }
 }
 
@@ -96,7 +115,8 @@ fn read_graph(file_lines: Flatten<Lines<BufReader<File>>>) -> Result<Graph, Stri
 }
 
 fn run_part1(filename: &str) {
-    let file_lines: Flatten<Lines<BufReader<File>>> = read_file_lines(filename).expect(format!("Failed to open file '{}'", filename).as_str());
+    let file_lines: Flatten<Lines<BufReader<File>>> =
+        read_file_lines(filename).expect(format!("Failed to open file '{}'", filename).as_str());
     let graph: Graph = read_graph(file_lines).unwrap();
     let ans: u16 = graph.min_path_distance().expect("Graph empty");
 
@@ -109,7 +129,8 @@ fn run_part1(filename: &str) {
 }
 
 fn run_part2(filename: &str) {
-    let file_lines: Flatten<Lines<BufReader<File>>> = read_file_lines(filename).expect(format!("Failed to open file '{}'", filename).as_str());
+    let file_lines: Flatten<Lines<BufReader<File>>> =
+        read_file_lines(filename).expect(format!("Failed to open file '{}'", filename).as_str());
     let graph: Graph = read_graph(file_lines).unwrap();
     let ans: u16 = graph.max_path_distance().expect("Graph empty");
 
