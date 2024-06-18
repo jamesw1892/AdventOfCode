@@ -65,23 +65,15 @@ impl Graph {
     }
 
     fn path_distance(&self, path: Vec<&String>) -> u16 {
-        let mut distance: u16 = 0;
-        let mut iter: Peekable<Iter<&String>> = path.iter().peekable();
-        loop {
-            match iter.next() {
-                None => break,
-                Some(from) => {
-                    match iter.peek() {
-                        None => break,
-                        Some(to) => distance += self.adjacency_list.get(*from).unwrap().get(**to).unwrap()
-                    }
-                },
-            }
-        }
-        // let prev: Option<&String> = None;
-        // let distance: u16 = 
-        // println!("{} = {}", path.iter().join(" -> "), distance);
-        distance
+        let mut prev: Option<&String> = None;
+        path.iter().map(|to| {
+            let dis: &u16 = match prev {
+                None => &0,
+                Some(from) => self.adjacency_list.get(from).unwrap().get(*to).unwrap()
+            };
+            prev = Some(*to);
+            dis
+        }).sum()
     }
 
     fn min_path_distance(&self) -> Option<u16> {
