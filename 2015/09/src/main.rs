@@ -5,7 +5,7 @@ use std::collections::hash_map::Keys;
 use std::collections::HashMap;
 use std::env::args;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Lines};
+use std::io::{self, BufRead, BufReader, Lines};
 use std::iter::{Flatten, Peekable};
 use std::slice::Iter;
 use std::str::FromStr;
@@ -64,10 +64,6 @@ impl Graph {
         }
     }
 
-    fn all_paths(&self) -> Permutations<Keys<String, HashMap<String, u16>>>{
-        self.adjacency_list.keys().permutations(self.adjacency_list.len())
-    }
-
     fn path_distance(&self, path: Vec<&String>) -> u16 {
         let mut distance: u16 = 0;
         let mut iter: Peekable<Iter<&String>> = path.iter().peekable();
@@ -88,29 +84,31 @@ impl Graph {
         distance
     }
 
-    fn min_path_distance(&self) -> u16 {
-        self.all_paths().map(|path| self.path_distance(path)).min().unwrap()
+    fn min_path_distance(&self) -> Option<u16> {
+        self.adjacency_list.keys().permutations(self.adjacency_list.len()).map(|path| self.path_distance(path)).min()
     }
 
-    fn max_path_distance(&self) -> u16 {
-        self.all_paths().map(|path| self.path_distance(path)).max().unwrap()
+    fn max_path_distance(&self) -> Option<u16> {
+        self.adjacency_list.keys().permutations(self.adjacency_list.len()).map(|path| self.path_distance(path)).max()
     }
 }
 
-fn read_file_lines(filename: &str) -> Flatten<Lines<BufReader<File>>> {
-    BufReader::new(
-        File::open(filename).expect(format!("Failed to open file '{}'", filename).as_str()),
-    )
-    .lines()
-    .flatten()
+fn read_file_lines(filename: &str) -> io::Result<Flatten<Lines<BufReader<File>>>> {
+    Ok(BufReader::new(File::open(filename)?).lines().flatten())
+}
+
+fn read_graph(file_lines: Flatten<Lines<BufReader<File>>>) -> Result<Graph, ParseErr> {
+    let mut graph: Graph = Graph::new();
+    for line in file_lines {
+        graph.add(line.parse::<Line>()?);
+    }
+    Ok(graph)
 }
 
 fn run_part1(filename: &str) {
-    let mut graph: Graph = Graph::new();
-    read_file_lines(filename).for_each(|line: String| {
-        graph.add(line.parse::<Line>().expect("Failed to parse line"));
-    });
-    let ans: u16 = graph.min_path_distance();
+    let file_lines: Flatten<Lines<BufReader<File>>> = read_file_lines(filename).expect(format!("Failed to open file '{}'", filename).as_str());
+    let graph: Graph = read_graph(file_lines).expect("Failed to parse graph");
+    let ans: u16 = graph.min_path_distance().expect("Graph empty");
 
     if filename == "test.txt" {
         assert_eq!(ans, 605);
@@ -121,11 +119,9 @@ fn run_part1(filename: &str) {
 }
 
 fn run_part2(filename: &str) {
-    let mut graph: Graph = Graph::new();
-    read_file_lines(filename).for_each(|line: String| {
-        graph.add(line.parse::<Line>().expect("Failed to parse line"));
-    });
-    let ans: u16 = graph.max_path_distance();
+    let file_lines: Flatten<Lines<BufReader<File>>> = read_file_lines(filename).expect(format!("Failed to open file '{}'", filename).as_str());
+    let graph: Graph = read_graph(file_lines).expect("Failed to parse line");
+    let ans: u16 = graph.max_path_distance().expect("Graph empty");
 
     if filename == "test.txt" {
         assert_eq!(ans, 982);
