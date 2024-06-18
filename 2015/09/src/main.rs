@@ -53,18 +53,18 @@ impl Graph {
             },
         }
         match self.adjacency_list.get_mut(&line.to) {
-            Some(inner) => drop(inner.insert(line.from.clone(), line.distance)),
+            Some(inner) => drop(inner.insert(line.from, line.distance)),
             None => {
                 let mut inner: HashMap<String, u16> = HashMap::new();
-                inner.insert(line.from.clone(), line.distance);
-                self.adjacency_list.insert(line.to.clone(), inner);
+                inner.insert(line.from, line.distance);
+                self.adjacency_list.insert(line.to, inner);
             },
         }
     }
 
     fn path_distance(&self, path: Vec<&String>) -> u16 {
         let mut prev: Option<&String> = None;
-        path.iter().map(|to| {
+        path.iter().map(|to: &&String| {
             let dis: &u16 = match prev {
                 None => &0,
                 Some(from) => self.adjacency_list.get(from).unwrap().get(*to).unwrap()
@@ -75,11 +75,11 @@ impl Graph {
     }
 
     fn min_path_distance(&self) -> Option<u16> {
-        self.adjacency_list.keys().permutations(self.adjacency_list.len()).map(|path| self.path_distance(path)).min()
+        self.adjacency_list.keys().permutations(self.adjacency_list.len()).map(|path: Vec<&String>| self.path_distance(path)).min()
     }
 
     fn max_path_distance(&self) -> Option<u16> {
-        self.adjacency_list.keys().permutations(self.adjacency_list.len()).map(|path| self.path_distance(path)).max()
+        self.adjacency_list.keys().permutations(self.adjacency_list.len()).map(|path: Vec<&String>| self.path_distance(path)).max()
     }
 }
 
