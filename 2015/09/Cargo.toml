@@ -1,0 +1,9 @@
+[package]
+name = "jamesw1892_advent-of-code_2015_09"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+itertools = "0.13.0"
+lazy_static = "1.4.0"
+regex = "1.10.5"
