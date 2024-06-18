@@ -7,15 +7,13 @@ use std::env::args;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Lines};
 use std::iter::{Flatten, Peekable};
+use std::num::ParseIntError;
 use std::slice::Iter;
 use std::str::FromStr;
 
 lazy_static! {
     static ref REGEX: Regex = Regex::new(r"^(?P<from>\w+) to (?P<to>\w+) = (?P<distance>\d+)$").unwrap();
 }
-
-#[derive(Debug)]
-struct ParseErr;
 
 struct Line {
     from: String,
@@ -24,14 +22,14 @@ struct Line {
 }
 
 impl FromStr for Line {
-    type Err = ParseErr;
+    type Err = String;
 
     fn from_str(line: &str) -> Result<Self, Self::Err> {
-        let captures: Captures = REGEX.captures(line).ok_or(ParseErr)?;
+        let captures: Captures = REGEX.captures(line).ok_or(format!("Failed to parse line '{}' - does not match regex", line))?;
         let from: String = captures.name("from").unwrap().as_str().to_string();
         let to: String = captures.name("to").unwrap().as_str().to_string();
-        let distance: String = captures.name("distance").unwrap().as_str().to_string();
-        let distance: u16 = distance.parse().map_err(|_| ParseErr)?;
+        let distance: &str = captures.name("distance").unwrap().as_str();
+        let distance: u16 = distance.parse().map_err(|err: ParseIntError| format!("Failed to parse distance from string '{}' into u16: {}", distance, err))?;
         return Ok(Line { from, to, distance });
     }
 }
@@ -89,7 +87,7 @@ fn read_file_lines(filename: &str) -> io::Result<Flatten<Lines<BufReader<File>>>
     Ok(BufReader::new(File::open(filename)?).lines().flatten())
 }
 
-fn read_graph(file_lines: Flatten<Lines<BufReader<File>>>) -> Result<Graph, ParseErr> {
+fn read_graph(file_lines: Flatten<Lines<BufReader<File>>>) -> Result<Graph, String> {
     let mut graph: Graph = Graph::new();
     for line in file_lines {
         graph.add(line.parse::<Line>()?);
@@ -99,7 +97,7 @@ fn read_graph(file_lines: Flatten<Lines<BufReader<File>>>) -> Result<Graph, Pars
 
 fn run_part1(filename: &str) {
     let file_lines: Flatten<Lines<BufReader<File>>> = read_file_lines(filename).expect(format!("Failed to open file '{}'", filename).as_str());
-    let graph: Graph = read_graph(file_lines).expect("Failed to parse graph");
+    let graph: Graph = read_graph(file_lines).unwrap();
     let ans: u16 = graph.min_path_distance().expect("Graph empty");
 
     if filename == "test.txt" {
@@ -112,7 +110,7 @@ fn run_part1(filename: &str) {
 
 fn run_part2(filename: &str) {
     let file_lines: Flatten<Lines<BufReader<File>>> = read_file_lines(filename).expect(format!("Failed to open file '{}'", filename).as_str());
-    let graph: Graph = read_graph(file_lines).expect("Failed to parse line");
+    let graph: Graph = read_graph(file_lines).unwrap();
     let ans: u16 = graph.max_path_distance().expect("Graph empty");
 
     if filename == "test.txt" {
