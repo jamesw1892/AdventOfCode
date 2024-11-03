@@ -51,6 +51,22 @@ fn run_part1(filename: &str) {
     }
 }
 
+fn run_part2(filename: &str) {
+    let file_lines: Flatten<Lines<BufReader<File>>> =
+        read_file_lines(filename).expect(format!("Failed to open file '{}'", filename).as_str());
+    for mut line in file_lines {
+        if filename == "input.txt" {
+            // There's only one line
+            for _ in 0..50 {
+                line = look_and_see(line);
+            }
+            println!("{}", line.len());
+        } else {
+            println!("{} -> {}", line, look_and_see(line.clone()));
+        }
+    }
+}
+
 fn main() {
     let args: Vec<String> = args().collect();
     let part: &str = if args.len() > 1 { &args[1] } else { "part1" };
@@ -61,7 +77,7 @@ fn main() {
     };
     match part {
         "part1" => run_part1(filename),
-        // "part2" => run_part2(filename),
+        "part2" => run_part2(filename),
         _ => panic!("Unknown part"),
     }
 }
