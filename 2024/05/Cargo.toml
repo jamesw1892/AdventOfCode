@@ -1,0 +1,7 @@
+[package]
+name = "jamesw1892_advent-of-code_2024_05"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+multimap = "0.10.0"
