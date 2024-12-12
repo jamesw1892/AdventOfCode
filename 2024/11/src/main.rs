@@ -29,13 +29,25 @@ fn simple(input: String, num_iterations: usize) -> usize {
     stones.len()
 }
 
+fn depth_first_recursive(stone: usize, num_iterations: usize) -> usize {
+    let result: Vec<usize> = transform_stone(&stone);
+    if num_iterations == 1 {
+        return result.len();
+    }
+    result.into_iter().map(|result_stone: usize| depth_first_recursive(result_stone, num_iterations - 1)).sum()
+}
+
+fn depth_first(input: String, num_iterations: usize) -> usize {
+    input.split(" ").map(|s: &str| s.parse().expect(format!("Failed to parse {s} into usize").as_str())).map(|stone: usize| depth_first_recursive(stone, num_iterations)).sum()
+}
+
 fn run_part1(filename: &str) {
     let file_lines: Flatten<Lines<BufReader<File>>> =
         read_file_lines(filename).expect(format!("Failed to open file '{}'", filename).as_str());
 
     // Only one line
     for line in file_lines {
-        let ans: usize = simple(line, 25);
+        let ans: usize = depth_first(line, 25);
         println!("{ans}");
     }
 }
@@ -46,7 +58,7 @@ fn run_part2(filename: &str) {
 
     // Only one line
     for line in file_lines {
-        let ans: usize = simple(line, 75);
+        let ans: usize = depth_first(line, 75);
         println!("{ans}");
     }
 }
