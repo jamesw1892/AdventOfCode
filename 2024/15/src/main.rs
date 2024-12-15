@@ -42,8 +42,6 @@ impl Grid {
         Grid { grid: Vec::new(), robot_x: 0, robot_y: 0, height: 0, width: 0 }
     }
     fn get(&self, x: usize, y: usize) -> &Cell {
-        // self.grid.get(y)?.get(x)
-        // .expect(format!("Invalid indices ({x}, {y})").as_str())
         &self.grid[y][x]
     }
     fn set(&mut self, x: usize, y: usize, new_cell: Cell) {
@@ -73,27 +71,21 @@ impl Grid {
         let mut done: bool = false;
         for x in xs.clone() {
             for y in ys.clone() {
-                // let cell = self.get(x, y);
-                // println!("Running check: ({x}, {y}) = {cell:?}");
                 match self.get(x, y) {
                     Cell::SPACE => {
+                        // Can move as seen space before wall
                         done = true;
                         break;
-                    }, // Can move as seen space before wall
+                    },
                     Cell::BOX => {}, // Do nothing
                     Cell::ROBOT => panic!("Shouldn't see robot at ({x}, {y}) when seeing if can move!"),
-                    Cell::WALL => {
-                        // println!("Couldn't move, vectors: {xs:?}, {ys:?}");
-                        return;
-                    }, // Can't move as seen wall before space
+                    Cell::WALL => return, // Can't move as seen wall before space
                 }
             }
             if done {
                 break;
             }
         }
-
-        // println!("Could move, vectors: {xs:?}, {ys:?}");
 
         // If get to this point, can move so move
         let mut current_cell: Cell = Cell::ROBOT;
@@ -124,7 +116,6 @@ impl Grid {
                 '<' => self.try_move((0..self.robot_x).rev().collect(), vec![self.robot_y]),
                 _ => panic!("Invalid direction {dir}"),
             }
-            // println!("{self:?}");
         }
     }
     fn total_gps(&self) -> usize {
@@ -148,7 +139,6 @@ fn run_part1(filename: &str) {
     for line in file_lines {
         if line == "" {
             seen_empty_line = true;
-            // println!("{grid:?}");
         } else if seen_empty_line {
             grid.try_moves(line);
         } else {
