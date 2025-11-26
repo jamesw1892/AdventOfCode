@@ -10,6 +10,7 @@ Years I did (more or less) as they came out:
 4. 2022: Python 3 - did most
 5. 2023: Typescript & Java - only did a few
 6. 2024: Rust
+7. 2025: Various
 
 Years I did retrospectively:
 
