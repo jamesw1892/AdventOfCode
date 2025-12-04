@@ -1,48 +1,32 @@
 from sys import argv
+from grid import Grid
 
-def can_be_accessed(grid: list[list[str]], x: int, y: int) -> int:
+def calc_paper_to_remove(grid: Grid) -> list[tuple[int, int]]:
     """
-    Given the grid and the coordinates of one cell, return whether the number of
-    neighbours (8 total) of grid[y][x] that contain paper (are '@' rather than
-    '.') is less than 4.
+    Return a list of coordinates of paper in the grid that can be removed. These
+    are all the cells that contain paper and less than 4 of the 8 neighbouring
+    cells contain paper.
     """
-
-    num = 0
-    for neighbour_y in (y-1, y, y+1):
-        for neighbour_x in (x-1, x, x+1):
-            if 0 <= neighbour_x < len(grid[0]) and \
-                0 <= neighbour_y < len(grid) and \
-                (neighbour_x != x or neighbour_y != y):
-                # print(f"Checking ({neighbour_x}, {neighbour_y})")
-                val: str = grid[neighbour_y][neighbour_x]
-                if val == "@":
-                    num += 1
-    # print(f"({x}, {y}) = {grid[y][x]} = {num}")
-    return num < 4
+    return [
+        (y, x)
+        for y in range(grid.height)
+        for x in range(grid.width)
+        if grid[y][x] == "@" and \
+            grid.neighbours(grid.neighbour_indices_8, y, x).count("@") < 4
+    ]
 
 def run_part1(filename: str) -> None:
-    with open(filename) as f:
-        grid: list[str] = [[s for s in line.strip()] for line in f.readlines()]
-    print(sum(
-        int(grid[y][x] == "@" and can_be_accessed(grid, x, y))
-        for y in range(len(grid))
-        for x in range(len(grid[0]))
-    ))
+    print(len(calc_paper_to_remove(Grid(filename))))
 
 def run_part2(filename: str) -> None:
-    with open(filename) as f:
-        grid: list[list[str]] = [[s for s in line.strip()] for line in f.readlines()]
+    grid: Grid = Grid(filename)
     total_removable: int = 0
     while True:
-        can_be_removed: list[tuple[int, int]] = []
-        for y in range(len(grid)):
-            for x in range(len(grid[0])):
-                if grid[y][x] == "@" and can_be_accessed(grid, x, y):
-                    can_be_removed.append((x, y))
-        if len(can_be_removed) == 0:
+        paper_to_remove: list[tuple[int, int]] = calc_paper_to_remove(grid)
+        if len(paper_to_remove) == 0:
             break
-        total_removable += len(can_be_removed)
-        for x, y in can_be_removed:
+        total_removable += len(paper_to_remove)
+        for y, x in paper_to_remove:
             grid[y][x] = "."
     print(total_removable)
 
