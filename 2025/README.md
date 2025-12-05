@@ -8,7 +8,7 @@ My solutions to [Advent of Code 2025](https://adventofcode.com/2025). This is my
 |  2  | ✅ | ✅ | Python |
 |  3  | ✅ | ✅ | Python with nice algorithm |
 |  4  | ✅ | ✅ | Python with Grid class |
-|  5  |  |  |  |
+|  5  | ✅ | ✅ | Rust - this one needed some thinking about efficiency! |
 |  6  |  |  |  |
 |  7  |  |  |  |
 |  8  |  |  |  |
