@@ -62,7 +62,7 @@ def run_part2(filename: str) -> None:
                 num_timelines_by_col[x-1] += prev_timelines
                 num_timelines_by_col[x+1] += prev_timelines
 
-            # If it's not a plitter, just add to the one below
+            # If it's not a splitter, just add to the one below
             else:
                 num_timelines_by_col[x] += prev_timelines
 
