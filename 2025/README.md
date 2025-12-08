@@ -11,7 +11,7 @@ My solutions to [Advent of Code 2025](https://adventofcode.com/2025). This is my
 |  5  | ✅    | ✅     | Rust     | This one needed some thinking about efficiency! |
 |  6  | ✅    | ✅     | Rust     | Not difficult algorithmically, just how to do it in Rust with lots of functional programming as always |
 |  7  | ✅    | ✅     | Python   | Used Grid class again. Part 1 was nice and easy but I could tell part 2 was going to need an efficient algorithm. Managed to come up with a nice one. |
-|  8  |  |  |  |  |
+|  8  | ✅    | ✅     | Python   | Minimum Spanning Tree (MST) of 3D points using Kruskal's algorithm. Part 1 stops after 1000 steps and part 2 finishes it. |
 |  9  |  |  |  |  |
 | 10  |  |  |  |  |
 | 11  |  |  |  |  |
